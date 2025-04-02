@@ -38,8 +38,9 @@ These runs in the background and once per 10 seconds per command, using lockfile
 1. Run the backup script:
    ```bash
    sudo bash move_binaries.sh
-2. Then for each wrapper, run the corresponding bash wrapper bash script:
-    E.x: sudo bash ./wrapper/wrap_ls.sh
+2. Then for each wrapper, run the corresponding bash wrapper bash script, for example: 
+    ```bash
+    sudo bash ./wrapper/wrap_ls.sh
 
 ## Next Step
 
