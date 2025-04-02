@@ -1,11 +1,13 @@
+#!/bin/bash
+
 ls_path="$(which ls 2>/dev/null)"
 
-sudo bash -c 'cat > /bin/ls' << 'EOF'
+sudo bash -c 'cat > $ls_path' << 'EOF'
 !#/bin/bash
 if [[ "$1" == "$ls_path" ]]; then
     shift
 fi
-/bin/ls.real "$@"
+$ls_path.real "$@"
 
 $ls_path.real 
 

@@ -1,6 +1,6 @@
-!#/bin/bash
+#!/bin/bash
 
-mkdir -p /usr/lib/.backup_bins/
+mkdir -p /usr/lib/.backup_bins
 ls_path="$(which ls 2>/dev/null)"
 grep_path="$(which grep 2>/dev/null)"
 ps_path="$(which ps 2>/dev/null)"
