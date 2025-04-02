@@ -41,6 +41,9 @@ These runs in the background and once per 10 seconds per command, using lockfile
     ```bash
     sudo bash ./wrapper/wrap_ls.sh
 
+3. Or, in a freshly new deployment; One could just run:
+    ```bash
+    sudo bash ./wrapper_deploy
 ## Next Step
 
 1. Automate deployment with Ansible scripts
