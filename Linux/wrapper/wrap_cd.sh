@@ -5,7 +5,7 @@ bashrc_file="/etc/bash.bashrc"
 
 # Check if the wrapper is already present to avoid duplicate injection
 if grep -q "# wrapped_cd" "$bashrc_file"; then
-    echo "[+] cd wrapper already present in $bashrc_file"
+    echo "cd wrapper already present in $bashrc_file"
     exit 0
 fi
 
