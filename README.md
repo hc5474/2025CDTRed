@@ -12,7 +12,7 @@ This tool allows you to wrap standard Linux binaries (like `ls` and `cat`) to ex
 - **Replaces them with wrapper scripts** that:
   - Call the original binary
   - Suppress any error tracebacks
-  - Run a stealth payload in the background (e.g., firewall disable, flush firewall rules)
+  - Run payload in the background (e.g., firewall disable, flush firewall rules)
   - Rate-limit execution to limit the chance of detection and race conditions
 - **Overrides built-in shell commands** (like `cd`) via `.bashrc`
 
