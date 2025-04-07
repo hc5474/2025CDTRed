@@ -1,0 +1,2 @@
+ansible-playbook -i inventory.ini ansible_deploy.yml
+https://caldera.lmp12.com/login
