@@ -22,7 +22,7 @@
       dnf:
         name: which
         state: present
-      when: inventory_hostname in ['triceratops1', 'triceratops1'] 
+      when: inventory_hostname in ['triceratops1', 'triceratops2'] 
 
 
     ###################################################################
