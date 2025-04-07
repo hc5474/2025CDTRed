@@ -18,6 +18,13 @@
         state: directory
         mode: "0755"
 
+    - name: install which to Rocky 9
+      dnf:
+        name: which
+        state: present
+      when: inventory_hostname in ['triceratops1', 'triceratops1'] 
+
+
     ###################################################################
     # 2) Copy required scripts from the Linux folder
     ###################################################################
