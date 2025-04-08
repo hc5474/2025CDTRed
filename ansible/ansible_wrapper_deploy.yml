@@ -76,7 +76,7 @@
     - name: Copy move_cd_rocky.sh to Rocky9
       copy:
         src: ../Linux/move_cd_rocky.sh
-        dest: "{{ deploy_dir }}/move_binaries.sh"
+        dest: "{{ deploy_dir }}/move_cd_rocky.sh"
         mode: "0755"
       when: inventory_hostname in ['triceratops1', 'triceratops2']
 
