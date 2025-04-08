@@ -137,7 +137,6 @@
       command: make
       args:
         chdir: "{{ deploy_dir }}"
-      ignore_errors: yes
 
     - name: Move compiled .so and update /etc/ld.so.preload
       shell: "mv {{ deploy_dir }}/libprocesshider.so /usr/local/lib/"
