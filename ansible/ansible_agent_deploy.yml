@@ -39,17 +39,6 @@
     - name: kill process ragdoll
       shell: pkill -9 -f ragdoll || true
       ignore_errors: yes
-
-    - name: Clean up any existing agents in /tmp or previous runs
-      shell: |
-        find /tmp/.syslogd_backup -maxdepth 4 \( \
-          -name 'splunk*' -o \
-          -name 'syslog*' -o \
-          -name 'graylog*' -o \
-          -name 'notlog*' -o \
-          -name 'ragdoll*' \
-        \) -exec rm -rf {} + || true
-      ignore_errors: yes
     
     - name: Delete privous hidden deployment directory
       file:
