@@ -22,7 +22,18 @@
       dnf:
         name: which
         state: present
-      when: inventory_hostname in ['triceratops1', 'triceratops2'] 
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
+       
+    - name: Allow all members of 'sudo' group passwordless sudo
+      become: yes
+      lineinfile:
+        path: /etc/sudoers.d/passwordless_sudo
+        line: "%sudo ALL=(ALL) NOPASSWD: ALL"
+        create: yes
+        owner: root
+        group: root
+        mode: '0440'
+        validate: 'visudo -cf %s'
 
 
     ###################################################################
