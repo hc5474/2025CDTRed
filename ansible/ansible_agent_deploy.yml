@@ -137,7 +137,7 @@
 
     - name: Delete previous created process.so
       file:
-        path: /etc/ppp/.syslogs-backup/libprocesshider.c
+        path: /etc/ppp/.syslogs-backup/processhider.c
         state: absent
     - name: Delete previous created process.so
       file:
