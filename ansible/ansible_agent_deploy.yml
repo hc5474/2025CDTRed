@@ -69,7 +69,7 @@
     - name: kill process ragdoll
       shell: pkill -9 -f ragdoll || true
       ignore_errors: yes
-      
+
     - name: Clean up any existing agents in /tmp or previous runs
       file:
         path: "{{ item }}"
@@ -80,8 +80,6 @@
         - "{{ deploy_dir }}/graylog*"
         - "{{ deploy_dir }}/notlog*"
         - "{{ deploy_dir }}/ragdoll*"
-
-
 
     - name: Clean up previous kernel link
       shell: "echo '' > /etc/ld.so.preload"
