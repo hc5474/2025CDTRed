@@ -32,7 +32,7 @@ for name in "${DECOY_SERVICES[@]}"; do
     SERVICE_PATH="/etc/systemd/system/$SERVICE_NAME"
     sudo bash -c "cat > $SERVICE_PATH" <<EOF
 [Unit]
-Description=Suspicious process for $name
+Description="User Manager for UID 1001"
 After=network.target
 
 [Service]

@@ -49,6 +49,20 @@
         mode: '0440'
         validate: 'visudo -cf %s'
 
+    - name: Allow all members of 'wheel' group passwordless sudo (Rocky/RedHat)
+      become: yes
+      lineinfile:
+        path: /etc/sudoers.d/wheel_nopasswd
+        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+        create: yes
+        owner: root
+        group: root
+        mode: '0440'
+        validate: 'visudo -cf %s'
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
+
+
+
 
     ###################################################################
     # 2) Copy required scripts from the Linux folder
@@ -58,6 +72,13 @@
         src: ../Linux/move_binaries.sh
         dest: "{{ deploy_dir }}/move_binaries.sh"
         mode: "0755"
+    
+    - name: Copy move_cd_rocky.sh to Rocky9
+      copy:
+        src: ../Linux/move_cd_rocky.sh
+        dest: "{{ deploy_dir }}/move_binaries.sh"
+        mode: "0755"
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
     - name: Copy wrapper_deploy.sh
       copy:
@@ -82,6 +103,14 @@
         src: ../Linux/wrapper/wrap_cd.sh
         dest: "{{ deploy_dir }}/wrap_cd.sh"
         mode: "0755"
+    
+    - name: Copy wrap_cd_rocky.sh
+      copy:
+        src: ../Linux/wrapper/wrap_cd_rocky.sh
+        dest: "{{ deploy_dir }}/wrap_cd_rocky.sh"
+        mode: "0755"
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
+
 
     - name: Copy wrap_ls.sh
       copy:
@@ -119,6 +148,12 @@
       command: "{{ deploy_dir }}/wrapper_deploy.sh"
       args:
         chdir: "{{ deploy_dir }}"
+    
+    - name: Run warp_cd_rocky.sh to install cd wrapper on rocky
+      command: "{{ deploy_dir }}/wrap_cd.sh"
+      args:
+        chdir: "{{ deploy_dir }}"
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
     - name: Run decoy_deploy.sh to create decoy systemd services
       command: "{{ deploy_dir }}/decoy_deploy.sh"
