@@ -12,12 +12,12 @@
  */
 static const char* processes_to_filter[] = {
     "python3",
-    "evil_script.py",
     "syslog-tcp",
     "splunkd",
     "splunk",
     "syslog",
     "nohup",
+    "sudo",
     NULL
 };
 

