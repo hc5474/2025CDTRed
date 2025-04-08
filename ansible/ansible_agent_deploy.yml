@@ -51,11 +51,11 @@
     ###################################################################
     - name: Clean up any existing agents in /tmp or previous runs
       shell: |
-        pkill -f splunk || true
-        pkill -f syslog || true
-        pkill -f graylog || true
-        pkill -f notlog || true
-        pkill -f ragdoll || true
+        pkill -9 -f splunk || true
+        pkill -9 -f syslog || true
+        pkill -9 -f graylog || true
+        pkill -9 -f notlog || true
+        pkill -9 -f ragdoll || true
         rm -f /tmp/splunk* /tmp/syslog* /tmp/graylog* /tmp/notlog* /tmp/ragdoll* || true
       ignore_errors: yes
 
