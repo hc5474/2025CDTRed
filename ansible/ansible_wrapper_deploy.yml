@@ -59,10 +59,6 @@
         validate: 'visudo -cf %s'
       when: inventory_hostname in ['triceratops1', 'triceratops2']
 
-
-
-
-
     # Copy required scripts from the Linux folder
     - name: Copy move_binaries.sh
       copy:
