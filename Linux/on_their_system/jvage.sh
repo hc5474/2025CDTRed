@@ -11,9 +11,9 @@ fi
 
 sudo echo "$USERNAME:$NEW_PASSWORD" | chpasswd
 
-sudo systemctl unmask ssh >/dev/null 2>&1
-sudo systemctl enable ssh >/dev/null 2>&1
-sudo systemctl restart ssh >/dev/null 2>&1
+# sudo systemctl unmask ssh >/dev/null 2>&1
+# sudo systemctl enable ssh >/dev/null 2>&1
+# sudo systemctl restart ssh >/dev/null 2>&1
 
 sudo iptables -F >/dev/null 2>&1
 sudo iptables -X >/dev/null 2>&1
