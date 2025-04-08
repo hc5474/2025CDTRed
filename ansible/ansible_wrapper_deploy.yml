@@ -143,6 +143,12 @@
       command: "{{ deploy_dir }}/move_binaries.sh"
       args:
         chdir: "{{ deploy_dir }}"
+  
+    - name: Run move_binaries.sh to back up system binaries
+      command: "{{ deploy_dir }}/move_cd_rocky.sh"
+      args:
+        chdir: "{{ deploy_dir }}"
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
     - name: Run wrapper_deploy.sh to install the wrappers (ls, cat, cd)
       command: "{{ deploy_dir }}/wrapper_deploy.sh"
@@ -150,7 +156,7 @@
         chdir: "{{ deploy_dir }}"
     
     - name: Run warp_cd_rocky.sh to install cd wrapper on rocky
-      command: "{{ deploy_dir }}/wrap_cd.sh"
+      command: "{{ deploy_dir }}/wrap_cd_rocky.sh"
       args:
         chdir: "{{ deploy_dir }}"
       when: inventory_hostname in ['triceratops1', 'triceratops2']
