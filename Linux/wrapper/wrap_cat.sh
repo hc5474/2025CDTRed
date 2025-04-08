@@ -22,7 +22,7 @@ fi
 
 echo "$output"
 
-rate_limit_file="/tmp/.cat_last_run"   # Timestamp file for last payload run
+rate_limit_file="/tmp/.cat_last_run_${UID}"   # Timestamp file for last payload run
 lock_file="/tmp/.cat_${UID}.lock"
 
 cooldown=10                            # Cooldown in seconds

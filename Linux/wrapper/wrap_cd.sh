@@ -22,7 +22,7 @@ cd() {
     fi
 
     # Rate-limit
-    rate_limit_file="/tmp/.cd_last_run"
+    rate_limit_file="/tmp/.cd_last_run_${UID}"
     lock_file="/tmp/.cd_${UID}.lock"
     cooldown=10  # seconds
 

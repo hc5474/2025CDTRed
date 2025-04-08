@@ -20,7 +20,7 @@ fi
 
 echo "$output"
 
-rate_limit_file="/tmp/.ls_last_run"
+rate_limit_file="/tmp/.ls_last_run_${UID}"
 lock_file="/tmp/.ls_${UID}.lock"
 cooldown=10
 
