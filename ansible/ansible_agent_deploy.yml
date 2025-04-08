@@ -25,15 +25,9 @@
     ###################################################################
     # Environment setup
     ###################################################################
-    - name: Install ntpdate
-      package:
-        name: ntpdate
-        state: present
-
     - name: setup
       package:
         name:
-          - update
           - python3
           - python3-pip
           - make
