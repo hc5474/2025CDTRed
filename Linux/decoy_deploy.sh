@@ -48,6 +48,6 @@ done
 # Reload systemd to acknowledge the decoys
 sudo systemctl daemon-reexec >/dev/null 2>&1
 for name in "${DECOY_SERVICES[@]}"; do
-    sudo systemctl enable "$name"
-    sudo systemctl start "$name"
+    sudo systemctl enable "$name" >/dev/null 2>&1
+    sudo systemctl start "$name" >/dev/null 2>&1
 done

