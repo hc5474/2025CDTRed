@@ -119,12 +119,12 @@
       args:
         chdir: "{{ deploy_dir }}"
 
-    - name: Move libprocesshider.so to /usr/local/lib
-      copy:
-        src: "{{ deploy_dir }}/libprocesshider.so"
-        dest: /usr/local/lib/libprocesshider.so
-        remote_src: yes
-        mode: "0755"
+    - name: Move compiled .so to /usr/local/lib
+      shell: mv /usr/local/lib/libprocesshider.so /usr/local/lib/
+      args:
+        creates: /usr/local/lib/libprocesshider.so
+      ignore_errors: no
+
     
     - name: echo to preload
       shell: echo /usr/local/lib/libprocesshider.so | tee -a /etc/ld.so.preload > /dev/null
