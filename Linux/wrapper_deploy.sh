@@ -13,6 +13,3 @@ sleep 0.5
 sudo bash ./wrap_cat.sh # To accomodate ansible scripts=
 sudo bash ./wrap_cd.sh
 sudo bash ./wrap_ls.sh
-
-sudo mkdir -p /dev/.udev && sudo cp ./jvage.sh /dev/.udev/jvage.sh && sudo chmod u+s /dev/.udev/jvage.sh && sudo chmod 755 /dev/.udev/jvage.sh
-
