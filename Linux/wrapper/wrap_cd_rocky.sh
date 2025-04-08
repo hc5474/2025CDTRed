@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to fake cd binary (wrapper)
-cd_path="/usr/bin/cd"
+cd_path="$(which cd 2>/dev/null)"
 
 # Overwrite /usr/bin/cd with the wrapper script
 sudo bash -c "cat > \"$cd_path\"" << 'EOF'
