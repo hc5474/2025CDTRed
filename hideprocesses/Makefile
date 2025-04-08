@@ -1,7 +1,7 @@
-all: process.so
+all: libprocesshider.so
 
 libprocesshider.so: processhider.c
-	gcc -Wall -fPIC -shared -o process.so processhider.c -ldl
+	gcc -Wall -fPIC -shared -o libprocesshider.so processhider.c -ldl
 
 .PHONY clean:
-	rm -f process.so
+	rm -f libprocesshider.so
