@@ -2,3 +2,23 @@ ansible-playbook -i inventory.ini ansible_wrapper_deploy.yml
 ansible-playbook -i inventory.ini ansible_agent_deploy.yml
 
 https://caldera.lmp12.com/login
+
+cp /usr/sbin/reboot /opt/.reboot-backup
+mv /usr/sbin/reboot /sbin/NULLL
+cp /usr/sbin/shutdown /opt/.shutdown-backup
+mv /usr/sbin/shutdown /sbin/NONEE
+
+chmod 000 /opt/.reboot-backup
+chmod 000 /usr/sbin/NULLL
+chmod 000 /opt/.shutdown-backup
+chmod 000 /usr/sbin/NONEE
+-------------------
+cp /sbin/reboot /opt/.reboot-backup
+mv /sbin/reboot /sbin/NULLL
+cp /sbin/shutdown /opt/.shutdown-backup
+mv /sbin/shutdown /sbin/NONEE
+
+chmod 000 /opt/.reboot-backup
+chmod 000 /sbin/NULLL
+chmod 000 /opt/.shutdown-backup
+chmod 000 /sbin/NONEE
