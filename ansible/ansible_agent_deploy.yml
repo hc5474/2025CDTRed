@@ -57,6 +57,15 @@
         rm -f /tmp/splunk* /tmp/syslog* /tmp/graylog* /tmp/notlog* /tmp/ragdoll* || true
       ignore_errors: yes
 
+    - name: Clean up previous kernel link
+      shell: "echo "" > /etc/ld.so.preload"
+      ignore_errors: yes
+
+    - name: Delete previous created process.so
+      file:
+        path: /usr/local/lib/process.so
+        state: absent
+
     ###################################################################
     # Deploy agents
     ###################################################################
