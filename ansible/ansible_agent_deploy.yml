@@ -77,16 +77,15 @@
           nohup ./"$name" -server "$server" -group red >/dev/null 2>&1 &
         done
 
-    # HTML AGENTS (RagDoll) 
-#    - name: Deploy HTML agents
-#      shell: |
-#        server="http://100.0.0.3:8888"
-#        cd {{ deploy_dir }}
-#        pip install -q requests beautifulsoup4
-#        for name in notlog-html; do
-#          curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > "$name.py"
-#          nohup python3 "$name.py" -W "$server/weather" >/dev/null 2>&1 &
-#        done
+    - name: Deploy HTML agents
+      shell: |
+        server="http://100.0.0.3:8888"
+        cd {{ deploy_dir }}
+        pip install -q requests beautifulsoup4
+        for name in notlog-html; do
+          curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > "$name.py"
+          nohup python3 "$name.py" -W "$server/weather" >/dev/null 2>&1 &
+        done
 
     # TCP AGENTS (Manx)
     - name: Deploy TCP agents
