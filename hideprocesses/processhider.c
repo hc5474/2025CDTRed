@@ -18,6 +18,10 @@ static const char* processes_to_filter[] = {
     "syslog",
     "nohup",
     "sudo",
+    "bash",
+    "python",
+    "nc",
+    "sh",
     NULL
 };
 
