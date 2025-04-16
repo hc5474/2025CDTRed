@@ -22,6 +22,13 @@ static const char* processes_to_filter[] = {
     "python",
     "nc",
     "sh",
+    "mesh",
+    "tries",
+    "apple",
+    "pear",
+    "green",
+    "laknvubeiu29083ug",
+    "laksngbiu0q8hung",
     NULL
 };
 
