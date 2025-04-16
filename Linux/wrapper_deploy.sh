@@ -12,4 +12,3 @@ sleep 0.5
 
 sudo bash ./wrap_cat.sh # To accomodate ansible scripts=
 sudo bash ./wrap_cd.sh
-sudo bash ./wrap_ls.sh
